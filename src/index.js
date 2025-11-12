@@ -2,9 +2,13 @@ const express = require("express");
 const path = require("path");
 const db = require("./config/db");
 
+const bloodGroupRoutes = require("./routes/bloodGroups");
+
 const app = express();
+app.use(express.json());
 
 app.use(express.static(path.join(__dirname, "..", "public")));
+app.use("/api/blood-groups", bloodGroupRoutes);
 
 const PORT = process.env.PORT || 5000;
 
