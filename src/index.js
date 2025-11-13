@@ -3,12 +3,20 @@ const path = require("path");
 const db = require("./config/db");
 
 const bloodGroupRoutes = require("./routes/bloodGroups");
+const donorRoutes = require("./routes/donors");
+const stockRoutes = require("./routes/bloodStock");
+const recipientRoutes = require("./routes/recipients");
+const requestRoutes = require("./routes/bloodRequests");
 
 const app = express();
 app.use(express.json());
 
 app.use(express.static(path.join(__dirname, "..", "public")));
 app.use("/api/blood-groups", bloodGroupRoutes);
+app.use("/api/donors", donorRoutes);
+app.use("/api/stock", stockRoutes);
+app.use("/api/recipients", recipientRoutes);
+app.use("/api/requests", requestRoutes);
 
 const PORT = process.env.PORT || 5000;
 
