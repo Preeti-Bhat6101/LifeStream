@@ -1,5 +1,37 @@
 // public/js/main.js
 
+const searchForm = document.getElementById("emergency-search-form");
+const searchBloodGroupSelect = document.getElementById("search-blood-group");
+const searchResultsList = document.getElementById("search-results-list");
+
+(async function checkLogin() {
+  try {
+    const response = await fetch("/api/auth/status");
+    const data = await response.json();
+
+    if (!data.loggedIn) {
+      window.location.href = "/login.html";
+      return; // Stop execution if not logged in
+    }
+
+    // User is logged in, now check their role
+    console.log("Logged in as:", data.user.name, "Role:", data.user.role);
+
+    // --- ROLE-BASED UI CONTROL ---
+    const managementNavLink = document.getElementById("management-nav-link");
+    if (data.user.role !== "Admin") {
+      // If the user is NOT an admin, hide the management link
+      if (managementNavLink) managementNavLink.style.display = "none";
+    } else {
+      // Otherwise, make sure it's visible
+      if (managementNavLink) managementNavLink.style.display = "block";
+    }
+  } catch (error) {
+    console.error("Auth check failed:", error);
+    window.location.href = "/login.html";
+  }
+})();
+
 document.addEventListener("DOMContentLoaded", () => {
   // --- DOM Element Selectors ---
 
@@ -30,7 +62,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const navLinks = document.querySelectorAll(".nav-link");
   const pageContents = document.querySelectorAll(".page-content");
+  const logoutBtn = document.getElementById("logout-btn");
 
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        await fetch("/api/auth/logout", { method: "POST" });
+        window.location.href = "/home.html";
+      } catch (error) {
+        console.error("Logout failed", error);
+      }
+    });
+  }
   // --- API Functions for Donors and Blood Groups ---
 
   navLinks.forEach((link) => {
@@ -316,6 +359,66 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  const fetchBloodGroupsForSearch = async () => {
+    try {
+      const response = await fetch("/api/blood-groups");
+      const bloodGroups = await response.json();
+      searchBloodGroupSelect.innerHTML =
+        '<option value="">Select Blood Group</option>';
+      bloodGroups.forEach((group) => {
+        const option = document.createElement("option");
+        option.value = group.BloodGroupID;
+        option.textContent = group.BloodType;
+        searchBloodGroupSelect.appendChild(option);
+      });
+    } catch (error) {
+      console.error("Error fetching blood groups for search:", error);
+    }
+  };
+
+  const handleEmergencySearch = async (event) => {
+    event.preventDefault();
+    const searchData = {
+      bloodGroupId: document.getElementById("search-blood-group").value,
+      location: document.getElementById("search-location").value,
+    };
+
+    try {
+      const response = await fetch("/api/donors/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(searchData),
+      });
+      const results = await response.json();
+
+      if (!response.ok) throw new Error(results.message || "Search failed");
+
+      searchResultsList.innerHTML = ""; // Clear previous results
+      if (results.length === 0) {
+        searchResultsList.innerHTML =
+          '<tr><td colspan="5">No matching donors found.</td></tr>';
+        return;
+      }
+
+      results.forEach((donor) => {
+        const row = document.createElement("tr");
+        const lastDonation = donor.LastDonationDate
+          ? new Date(donor.LastDonationDate).toLocaleDateString()
+          : "N/A";
+        row.innerHTML = `
+                <td>${donor.Name}</td>
+                <td>${donor.Contact}</td>
+                <td>${donor.Location}</td>
+                <td>${donor.BloodType}</td>
+                <td>${lastDonation}</td>
+            `;
+        searchResultsList.appendChild(row);
+      });
+    } catch (error) {
+      searchResultsList.innerHTML = `<tr><td colspan="5" style="color: red;">Error: ${error.message}</td></tr>`;
+    }
+  };
+
   const handleRequestSubmit = async (event) => {
     event.preventDefault();
     const requestData = {
@@ -368,6 +471,7 @@ document.addEventListener("DOMContentLoaded", () => {
   recipientForm.addEventListener("submit", handleRecipientSubmit);
   requestForm.addEventListener("submit", handleRequestSubmit);
   requestList.addEventListener("click", handleFulfillClick);
+  searchForm.addEventListener("submit", handleEmergencySearch);
 
   // Call all the functions to fetch and display initial data when the page loads
   fetchBloodGroups();
@@ -377,4 +481,5 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchRecipientsForDropdown();
   fetchBloodGroupsForRequest();
   fetchRequests();
+  fetchBloodGroupsForSearch();
 });

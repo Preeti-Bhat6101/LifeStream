@@ -3,10 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LifeStream</title>
+    <title>LifeStream - Blood Bank</title>
     <link rel="stylesheet" href="/css/style.css" />
   </head>
-
   <body>
     <header>
       <div class="container">
@@ -26,14 +25,23 @@
             <li>
               <a href="#" class="nav-link" data-target="donors">Donor List</a>
             </li>
-            <li>
+            <li id="management-nav-link">
               <a href="#" class="nav-link" data-target="management"
                 >Management</a
               >
             </li>
-            <!-- NEW LINK -->
           </ul>
         </nav>
+        <button
+          id="logout-btn"
+          style="
+            background-color: transparent;
+            border: 1px solid white;
+            margin-left: 20px;
+          "
+        >
+          Logout
+        </button>
       </div>
     </header>
 
@@ -81,6 +89,48 @@
               </form>
             </div>
           </div>
+        </section>
+
+        <!-- NEWLY ADDED EMERGENCY SEARCH SECTION -->
+        <section class="card">
+          <h2>Emergency Donor Search</h2>
+          <form id="emergency-search-form">
+            <div class="grid-2">
+              <div>
+                <label for="search-blood-group">Required Blood Group:</label>
+                <select id="search-blood-group" required></select>
+              </div>
+              <div>
+                <label for="search-location">Location (Optional):</label>
+                <input
+                  type="text"
+                  id="search-location"
+                  placeholder="e.g., Bengaluru"
+                />
+              </div>
+            </div>
+            <button type="submit">Search Donors</button>
+          </form>
+
+          <hr />
+
+          <h3>Search Results</h3>
+          <table id="search-results-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Contact</th>
+                <th>Location</th>
+                <th>Blood Group</th>
+                <th>Last Donation</th>
+              </tr>
+            </thead>
+            <tbody id="search-results-list">
+              <tr>
+                <td colspan="5">No search performed yet.</td>
+              </tr>
+            </tbody>
+          </table>
         </section>
       </div>
 
@@ -135,7 +185,7 @@
         </section>
       </div>
 
-      <!-- NEW PAGE 4: Management (Hidden by default) -->
+      <!-- PAGE 4: Management (Hidden by default) -->
       <div id="management" class="page-content hidden">
         <section class="card">
           <h2>Add New Recipient (Hospital/Clinic)</h2>

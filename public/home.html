@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LifeStream</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+      /* Homepage-specific styles */
+      .hero {
+        background-color: var(--dark-green);
+        color: var(--white);
+        height: 60vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 0 20px;
+      }
+      .hero h1 {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        color: var(--white);
+      }
+      .hero p {
+        font-size: 1.25rem;
+        max-width: 600px;
+      }
+      .hero .cta-button {
+        display: inline-block;
+        background-color: var(--blood-red);
+        color: var(--white);
+        padding: 15px 30px;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 2rem;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: transform 0.3s ease;
+      }
+      .hero .cta-button:hover {
+        transform: scale(1.05);
+        background-color: var(--blood-red);
+      }
+
+      .features {
+        padding: 4rem 0;
+        background-color: var(--white);
+      }
+      .features .container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        text-align: center;
+      }
+      .feature-item {
+        padding: 1.5rem;
+      }
+      .feature-item h3 {
+        color: var(--dark-green);
+        margin-bottom: 0.5rem;
+      }
+
+      footer {
+        background-color: var(--dark-text);
+        color: var(--white);
+        text-align: center;
+        padding: 2rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="home-header">
+      <div class="container">
+        <div class="logo">
+          <h1>LifeStream</h1>
+        </div>
+        <nav>
+          <a href="/login.html" class="login-button">Staff Login</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1>Your Donation Can Save a Life</h1>
+        <p>
+          Welcome to the LifeStream Blood Bank Management System. We connect
+          generous donors with those in critical need, ensuring a safe and ready
+          blood supply for our community.
+        </p>
+        <a href="/login.html" class="cta-button">Access the Portal</a>
+      </section>
+
+      <section class="features">
+        <div class="container">
+          <div class="feature-item">
+            <h3>Efficient Inventory Management</h3>
+            <p>
+              Real-time tracking of our blood supply ensures that we always know
+              what's available, reducing waste and improving response times.
+            </p>
+          </div>
+          <div class="feature-item">
+            <h3>Donor Coordination</h3>
+            <p>
+              Our system helps manage donor information, track donation history,
+              and quickly find eligible donors during emergencies.
+            </p>
+          </div>
+          <div class="feature-item">
+            <h3>Streamlined Requests</h3>
+            <p>
+              Hospitals and clinics can request blood through a centralized
+              system, allowing for faster and more accurate fulfillment of
+              critical needs.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>&copy; 2025 LifeStream. All Rights Reserved.</p>
+    </footer>
+  </body>
+</html>

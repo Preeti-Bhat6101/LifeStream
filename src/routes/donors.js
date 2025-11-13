@@ -1,4 +1,3 @@
-// src/routes/donors.js
 const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
@@ -17,7 +16,6 @@ router.post("/", async (req, res) => {
   try {
     const sql =
       "INSERT INTO Donors (Name, Contact, Location, BloodGroupID, LastDonationDate) VALUES (?, ?, ?, ?, ?)";
-    // Use null for an empty date string
     const finalLastDonationDate = lastDonationDate ? lastDonationDate : null;
 
     const [result] = await db.query(sql, [
@@ -46,7 +44,6 @@ router.post("/", async (req, res) => {
 // Desc:  Get all donors
 router.get("/", async (req, res) => {
   try {
-    // Join with BloodGroups to show the blood type string instead of just the ID
     const sql = `
             SELECT DonorID, Name, Contact, Location, LastDonationDate, BloodGroups.BloodType 
             FROM Donors 
@@ -60,6 +57,49 @@ router.get("/", async (req, res) => {
     res
       .status(500)
       .json({ message: "Failed to fetch donors", error: error.message });
+  }
+});
+
+// Route: POST /api/donors/search
+// Desc:  Search for eligible donors by blood group and location
+router.post("/search", async (req, res) => {
+  const { bloodGroupId, location } = req.body;
+
+  if (!bloodGroupId) {
+    return res
+      .status(400)
+      .json({ message: "Blood group is required for search." });
+  }
+
+  try {
+    // Start with the base query
+    let sql = `
+            SELECT Name, Contact, Location, LastDonationDate, bg.BloodType
+            FROM Donors
+            JOIN BloodGroups bg ON Donors.BloodGroupID = bg.BloodGroupID
+            WHERE Donors.BloodGroupID = ?
+        `;
+    const params = [bloodGroupId];
+
+    // Add location to the query if it was provided
+    if (location) {
+      // Using LIKE to allow for partial matches
+      sql += " AND Location LIKE ?";
+      params.push(`%${location}%`);
+    }
+
+    // Optional: Add eligibility check (e.g., last donated more than 3 months ago)
+    // sql += ' AND (LastDonationDate IS NULL OR LastDonationDate <= DATE_SUB(CURDATE(), INTERVAL 3 MONTH))';
+
+    sql += " ORDER BY Name;";
+
+    const [donors] = await db.query(sql, params);
+    res.status(200).json(donors);
+  } catch (error) {
+    console.error("Error searching donors:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to search for donors", error: error.message });
   }
 });
 

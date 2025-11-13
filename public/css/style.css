@@ -172,3 +172,38 @@ nav a.active {
 .page-content.hidden {
   display: none;
 }
+
+/* --- HOMEPAGE HEADER & FOOTER STYLES --- */
+
+.home-header {
+  background: var(--white);
+  padding: 1.5rem 0;
+  border-bottom: 1px solid #e7e7e7;
+  margin-bottom: 0; /* Ensures it sits flush against the hero section */
+}
+
+.home-header .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.home-header .logo h1 {
+  color: var(--dark-green);
+  margin: 0; /* Removes default h1 margin */
+}
+
+.home-header .login-button {
+  background-color: var(--medium-green);
+  color: var(--white);
+  padding: 10px 20px;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.home-header .login-button:hover {
+  background-color: var(--dark-green);
+  color: var(--white);
+}
