@@ -157,7 +157,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Handles the submission of the new donor registration form
   const handleDonorSubmit = async (event) => {
     event.preventDefault();
-
     const donorData = {
       name: document.getElementById("name").value,
       contact: document.getElementById("contact").value,
@@ -165,30 +164,33 @@ document.addEventListener("DOMContentLoaded", () => {
       bloodGroupId: document.getElementById("blood-group-select").value,
       lastDonationDate: document.getElementById("last-donation").value,
     };
-
     try {
       const response = await fetch("/api/donors", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(donorData),
       });
-
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Submission failed");
-      }
+      if (!response.ok) throw new Error(result.message);
 
       donorFormMessage.textContent = result.message;
       donorFormMessage.style.color = "green";
-      donorForm.reset(); // Clear the form
-
-      // Refresh both the donor table and the donor dropdown list
+      donorForm.reset();
       fetchDonors();
       fetchDonorsForDropdown();
+
+      // *** NEW: Clear the success message after 3 seconds ***
+      setTimeout(() => {
+        donorFormMessage.textContent = "";
+      }, 3000);
     } catch (error) {
       donorFormMessage.textContent = `Error: ${error.message}`;
       donorFormMessage.style.color = "red";
+
+      // *** NEW: Clear the error message after 5 seconds ***
+      setTimeout(() => {
+        donorFormMessage.textContent = "";
+      }, 5000);
     }
   };
 
@@ -251,7 +253,6 @@ document.addEventListener("DOMContentLoaded", () => {
       donorId: document.getElementById("donor-select").value,
       collectionDate: document.getElementById("collection-date").value,
     };
-
     try {
       const response = await fetch("/api/stock", {
         method: "POST",
@@ -259,16 +260,25 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify(stockData),
       });
       const result = await response.json();
-
       if (!response.ok) throw new Error(result.message);
 
       stockFormMessage.textContent = result.message;
       stockFormMessage.style.color = "green";
       stockForm.reset();
-      fetchStock(); // Refresh the stock list
+      fetchStock();
+
+      // *** NEW: Clear the success message after 3 seconds ***
+      setTimeout(() => {
+        stockFormMessage.textContent = "";
+      }, 3000);
     } catch (error) {
       stockFormMessage.textContent = `Error: ${error.message}`;
       stockFormMessage.style.color = "red";
+
+      // *** NEW: Clear the error message after 5 seconds ***
+      setTimeout(() => {
+        stockFormMessage.textContent = "";
+      }, 5000);
     }
   };
 
@@ -278,7 +288,6 @@ document.addEventListener("DOMContentLoaded", () => {
       name: document.getElementById("recipient-name").value,
       contact: document.getElementById("recipient-contact").value,
     };
-
     try {
       const response = await fetch("/api/recipients", {
         method: "POST",
@@ -291,11 +300,20 @@ document.addEventListener("DOMContentLoaded", () => {
       recipientFormMessage.textContent = result.message;
       recipientFormMessage.style.color = "green";
       recipientForm.reset();
-      // We'll need to refresh the recipient list for the upcoming request form
       fetchRecipientsForDropdown();
+
+      // *** NEW: Clear the success message after 3 seconds ***
+      setTimeout(() => {
+        recipientFormMessage.textContent = "";
+      }, 3000);
     } catch (error) {
       recipientFormMessage.textContent = `Error: ${error.message}`;
       recipientFormMessage.style.color = "red";
+
+      // *** NEW: Clear the error message after 5 seconds ***
+      setTimeout(() => {
+        recipientFormMessage.textContent = "";
+      }, 5000);
     }
   };
 
@@ -433,13 +451,24 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.message);
+
       requestFormMessage.textContent = result.message;
       requestFormMessage.style.color = "green";
       requestForm.reset();
       fetchRequests();
+
+      // *** NEW: Clear the success message after 3 seconds ***
+      setTimeout(() => {
+        requestFormMessage.textContent = "";
+      }, 3000);
     } catch (error) {
       requestFormMessage.textContent = `Error: ${error.message}`;
       requestFormMessage.style.color = "red";
+
+      // *** NEW: Clear the error message after 5 seconds ***
+      setTimeout(() => {
+        requestFormMessage.textContent = "";
+      }, 5000);
     }
   };
 
