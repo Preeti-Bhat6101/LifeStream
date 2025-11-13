@@ -28,7 +28,32 @@ document.addEventListener("DOMContentLoaded", () => {
   const requestList = document.getElementById("request-list");
   const requestFormMessage = document.getElementById("request-form-message");
 
+  const navLinks = document.querySelectorAll(".nav-link");
+  const pageContents = document.querySelectorAll(".page-content");
+
   // --- API Functions for Donors and Blood Groups ---
+
+  navLinks.forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault(); // Stop the link from reloading the page
+
+      const targetId = link.dataset.target;
+
+      // Hide all pages
+      pageContents.forEach((page) => {
+        page.classList.add("hidden");
+      });
+
+      // Show the target page
+      document.getElementById(targetId).classList.remove("hidden");
+
+      // Update active link style
+      navLinks.forEach((navLink) => {
+        navLink.classList.remove("active");
+      });
+      link.classList.add("active");
+    });
+  });
 
   // Fetches blood groups to populate the dropdown in the donor registration form
   const fetchBloodGroups = async () => {
