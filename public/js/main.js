@@ -231,12 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const row = document.createElement("tr");
         const collection = new Date(unit.CollectionDate).toLocaleDateString();
         const expiry = new Date(unit.ExpiryDate).toLocaleDateString();
-        row.innerHTML = `
-                    <td>${unit.DonorName}</td>
-                    <td>${unit.BloodType}</td>
-                    <td>${collection}</td>
-                    <td>${expiry}</td>
-                `;
+        row.innerHTML = `<td>${unit.DonorName}</td><td>${unit.BloodType}</td><td>${unit.QuantityML}</td><td>${collection}</td><td>${expiry}</td>`;
         stockList.appendChild(row);
       });
     } catch (error) {
@@ -252,6 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const stockData = {
       donorId: document.getElementById("donor-select").value,
       collectionDate: document.getElementById("collection-date").value,
+      quantityML: document.getElementById("quantity-ml").value, // <-- Add this line
     };
     try {
       const response = await fetch("/api/stock", {
@@ -364,12 +360,7 @@ document.addEventListener("DOMContentLoaded", () => {
       requests.forEach((req) => {
         const row = document.createElement("tr");
         const reqDate = new Date(req.RequestDate).toLocaleString();
-        row.innerHTML = `
-                <td>${req.RecipientName}</td>
-                <td>${req.BloodType}</td>
-                <td>${reqDate}</td>
-                <td><button class="fulfill-btn" data-id="${req.RequestID}">Fulfill</button></td>
-            `;
+        row.innerHTML = `<td>${req.RecipientName}</td><td>${req.BloodType}</td><td>${req.QuantityRequiredML}</td><td>${reqDate}</td><td><button class="fulfill-btn" data-id="${req.RequestID}">Fulfill</button></td>`;
         requestList.appendChild(row);
       });
     } catch (error) {
@@ -442,6 +433,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const requestData = {
       recipientId: recipientSelect.value,
       bloodGroupId: requestBloodGroupSelect.value,
+      quantityRequiredML: document.getElementById("request-quantity-ml").value, // <-- Add this line
     };
     try {
       const response = await fetch("/api/requests", {

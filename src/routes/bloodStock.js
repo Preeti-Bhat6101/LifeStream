@@ -6,7 +6,8 @@ const db = require("../config/db");
 // Route: POST /api/stock
 // Desc:  Add a new blood unit to the stock
 router.post("/", async (req, res) => {
-  const { donorId, collectionDate } = req.body;
+  // Now accepting quantityML
+  const { donorId, collectionDate, quantityML } = req.body;
 
   if (!donorId || !collectionDate) {
     return res
@@ -15,37 +16,39 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    // First, get the blood group ID from the donor
     const [donors] = await db.query(
       "SELECT BloodGroupID FROM Donors WHERE DonorID = ?",
       [donorId]
     );
-    if (donors.length === 0) {
+    if (donors.length === 0)
       return res.status(404).json({ message: "Donor not found." });
-    }
+
     const bloodGroupId = donors[0].BloodGroupID;
 
-    // Calculate expiry date (e.g., 42 days for red blood cells)
     const collection = new Date(collectionDate);
-    const expiryDate = new Date(collection.setDate(collection.getDate() + 42))
+    const expiryDate = new Date(
+      new Date(collection).setDate(collection.getDate() + 42)
+    )
       .toISOString()
       .slice(0, 10);
 
+    // Use the provided quantity, or default to 470
+    const finalQuantity = quantityML || 470;
+
     const sql =
-      "INSERT INTO BloodStock (DonorID, BloodGroupID, CollectionDate, ExpiryDate) VALUES (?, ?, ?, ?)";
+      "INSERT INTO BloodStock (DonorID, BloodGroupID, QuantityML, CollectionDate, ExpiryDate) VALUES (?, ?, ?, ?, ?)";
     const [result] = await db.query(sql, [
       donorId,
       bloodGroupId,
+      finalQuantity,
       collectionDate,
       expiryDate,
     ]);
 
-    res
-      .status(201)
-      .json({
-        message: "Blood unit added to stock successfully",
-        stockId: result.insertId,
-      });
+    res.status(201).json({
+      message: "Blood unit added to stock successfully",
+      stockId: result.insertId,
+    });
   } catch (error) {
     console.error("Error adding blood to stock:", error);
     res
@@ -63,13 +66,16 @@ router.get("/", async (req, res) => {
                 bs.StockID,
                 d.Name AS DonorName,
                 bg.BloodType,
+                bs.QuantityML,
                 bs.CollectionDate,
                 bs.ExpiryDate,
                 bs.Status
             FROM BloodStock AS bs
             JOIN Donors AS d ON bs.DonorID = d.DonorID
             JOIN BloodGroups AS bg ON bs.BloodGroupID = bg.BloodGroupID
-            WHERE bs.Status = 'Available'
+            WHERE 
+                bs.Status = 'Available' 
+                AND bs.ExpiryDate >= CURDATE() -- <-- THE NEW, IMPORTANT LINE
             ORDER BY bs.ExpiryDate ASC;
         `;
     const [stock] = await db.query(sql);

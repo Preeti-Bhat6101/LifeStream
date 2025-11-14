@@ -7,46 +7,50 @@
     <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body>
+    <!-- in public/index.html -->
     <header>
       <div class="container">
-        <h1>LifeStream</h1>
-        <nav>
-          <ul>
-            <li>
-              <a href="#" class="nav-link active" data-target="dashboard"
-                >Dashboard</a
-              >
-            </li>
-            <li>
-              <a href="#" class="nav-link" data-target="inventory"
-                >Inventory & Requests</a
-              >
-            </li>
-            <li>
-              <a href="#" class="nav-link" data-target="donors">Donor List</a>
-            </li>
-            <li id="management-nav-link">
-              <a href="#" class="nav-link" data-target="management"
-                >Management</a
-              >
-            </li>
-          </ul>
-        </nav>
-        <button
-          id="logout-btn"
-          style="
-            background-color: transparent;
-            border: 1px solid white;
-            margin-left: 20px;
-          "
-        >
-          Logout
-        </button>
+        <!-- 1. Add a logo container -->
+        <div class="logo">
+          <h1>LifeStream</h1>
+        </div>
+
+        <!-- 2. Group the navigation and logout button -->
+        <div class="header-actions">
+          <nav>
+            <ul>
+              <li>
+                <a href="#" class="nav-link active" data-target="dashboard"
+                  >Dashboard</a
+                >
+              </li>
+              <li>
+                <a href="#" class="nav-link" data-target="inventory"
+                  >Inventory & Requests</a
+                >
+              </li>
+              <li>
+                <a href="#" class="nav-link" data-target="donors">Donor List</a>
+              </li>
+              <li>
+                <a href="#" class="nav-link" data-target="emergency-search"
+                  >Emergency Search</a
+                >
+              </li>
+              <li id="management-nav-link">
+                <a href="#" class="nav-link" data-target="management"
+                  >Management</a
+                >
+              </li>
+            </ul>
+          </nav>
+          <button id="logout-btn">Logout</button>
+        </div>
       </div>
     </header>
 
     <main class="container">
-      <!-- PAGE 1: Dashboard (Visible by default) -->
+      <!-- PAGE 1: Dashboard (Now cleaner) -->
       <div id="dashboard" class="page-content">
         <section class="card">
           <div class="grid-2">
@@ -72,6 +76,12 @@
               <form id="stock-form">
                 <label for="donor-select">Select Donor:</label
                 ><select id="donor-select" required></select>
+                <label for="quantity-ml">Quantity (ml):</label
+                ><input
+                  type="number"
+                  id="quantity-ml"
+                  placeholder="e.g., 470"
+                />
                 <label for="collection-date">Collection Date:</label
                 ><input type="date" id="collection-date" required />
                 <button type="submit">Add to Stock</button>
@@ -84,14 +94,72 @@
                 ><select id="recipient-select" required></select>
                 <label for="request-blood-group-select">Blood Group:</label
                 ><select id="request-blood-group-select" required></select>
+                <label for="request-quantity-ml">Quantity Required (ml):</label
+                ><input type="number" id="request-quantity-ml" required />
                 <button type="submit">Create Request</button>
                 <p id="request-form-message" class="form-message"></p>
               </form>
             </div>
           </div>
         </section>
+        <!-- The Emergency Search section has been MOVED from here -->
+      </div>
 
-        <!-- NEWLY ADDED EMERGENCY SEARCH SECTION -->
+      <!-- PAGE 2: Inventory (Unchanged) -->
+      <div id="inventory" class="page-content hidden">
+        <section class="card">
+          <h2>Pending Blood Requests</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Recipient</th>
+                <th>Blood Type</th>
+                <th>Quantity (ml)</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="request-list"></tbody>
+          </table>
+        </section>
+        <section class="card">
+          <h2>Blood Stock Inventory (Available)</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Donor Name</th>
+                <th>Blood Type</th>
+                <th>Quantity (ml)</th>
+                <th>Collection Date</th>
+                <th>Expiry Date</th>
+              </tr>
+            </thead>
+            <tbody id="stock-list"></tbody>
+          </table>
+        </section>
+      </div>
+
+      <!-- PAGE 3: Donors (Unchanged) -->
+      <div id="donors" class="page-content hidden">
+        <section class="card">
+          <h2>Registered Donors</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Contact</th>
+                <th>Location</th>
+                <th>Blood Group</th>
+                <th>Last Donation</th>
+              </tr>
+            </thead>
+            <tbody id="donor-list"></tbody>
+          </table>
+        </section>
+      </div>
+
+      <!-- NEW PAGE 4: Emergency Search -->
+      <div id="emergency-search" class="page-content hidden">
         <section class="card">
           <h2>Emergency Donor Search</h2>
           <form id="emergency-search-form">
@@ -111,9 +179,7 @@
             </div>
             <button type="submit">Search Donors</button>
           </form>
-
           <hr />
-
           <h3>Search Results</h3>
           <table id="search-results-table">
             <thead>
@@ -134,58 +200,7 @@
         </section>
       </div>
 
-      <!-- PAGE 2: Inventory (Hidden by default) -->
-      <div id="inventory" class="page-content hidden">
-        <section class="card">
-          <h2>Pending Blood Requests</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Recipient</th>
-                <th>Blood Type</th>
-                <th>Date</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="request-list"></tbody>
-          </table>
-        </section>
-        <section class="card">
-          <h2>Blood Stock Inventory (Available)</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Donor Name</th>
-                <th>Blood Type</th>
-                <th>Collection Date</th>
-                <th>Expiry Date</th>
-              </tr>
-            </thead>
-            <tbody id="stock-list"></tbody>
-          </table>
-        </section>
-      </div>
-
-      <!-- PAGE 3: Donors (Hidden by default) -->
-      <div id="donors" class="page-content hidden">
-        <section class="card">
-          <h2>Registered Donors</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Contact</th>
-                <th>Location</th>
-                <th>Blood Group</th>
-                <th>Last Donation</th>
-              </tr>
-            </thead>
-            <tbody id="donor-list"></tbody>
-          </table>
-        </section>
-      </div>
-
-      <!-- PAGE 4: Management (Hidden by default) -->
+      <!-- PAGE 5: Management (Unchanged) -->
       <div id="management" class="page-content hidden">
         <section class="card">
           <h2>Add New Recipient (Hospital/Clinic)</h2>
