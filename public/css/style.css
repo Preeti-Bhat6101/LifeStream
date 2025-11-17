@@ -168,9 +168,17 @@ nav a.active {
   font-weight: bold;
 }
 
-/* --- PAGE CONTENT TABS --- */
-.page-content.hidden {
-  display: none;
+.page-content {
+  display: block; /* Define the default state */
+}
+
+#staff-dashboard.hidden,
+#admin-dashboard.hidden,
+#inventory.hidden,
+#donors.hidden,
+#emergency-search.hidden,
+#management.hidden {
+  display: none !important;
 }
 
 /* --- HOMEPAGE HEADER & FOOTER STYLES --- */
@@ -234,4 +242,8 @@ nav a.active {
 #logout-btn:hover {
   background-color: var(--blood-red);
   border-color: var(--blood-red);
+}
+
+.hidden {
+  display: none !important;
 }

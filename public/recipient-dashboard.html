@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recipient Dashboard - LifeStream</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <div class="logo">
+          <h1>Recipient Portal</h1>
+        </div>
+        <div class="header-actions">
+          <p id="welcome-message" style="color: white; margin-right: 2rem">
+            Welcome!
+          </p>
+          <button id="logout-btn">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="card">
+        <h2>Create a New Blood Request</h2>
+        <form id="recipient-request-form">
+          <label for="request-blood-group-select">Blood Group:</label>
+          <select id="request-blood-group-select" required>
+            <option value="">Loading blood groups...</option>
+          </select>
+
+          <label for="request-quantity-ml">Quantity Required (ml):</label>
+          <input
+            type="number"
+            id="request-quantity-ml"
+            required
+            placeholder="e.g., 250"
+          />
+
+          <button type="submit">Submit Request</button>
+        </form>
+        <p id="request-form-message" class="form-message"></p>
+      </section>
+
+      <section class="card">
+        <h2>Your Request History</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Blood Type</th>
+              <th>Quantity (ml)</th>
+              <th>Request Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="request-history-list">
+            <!-- History will be loaded here -->
+          </tbody>
+        </table>
+      </section>
+    </main>
+
+    <!-- Link to a new, dedicated JavaScript file -->
+    <script src="/js/recipient.js"></script>
+  </body>
+</html>

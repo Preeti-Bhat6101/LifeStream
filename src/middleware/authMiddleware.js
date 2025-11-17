@@ -11,4 +11,14 @@ const isAdmin = (req, res, next) => {
   res.status(403).json({ message: "Access denied. Admins only." });
 };
 
-module.exports = { isAdmin };
+const isAuthenticated = (req, res, next) => {
+  // Check if a user session exists
+  if (req.session.user) {
+    // If logged in, proceed to the requested page
+    return next();
+  }
+  // If not logged in, redirect them to the login page
+  res.redirect("/login.html");
+};
+
+module.exports = { isAdmin, isAuthenticated };
