@@ -9,10 +9,6 @@ const donorRoutes = require("./routes/donors");
 const stockRoutes = require("./routes/bloodStock");
 const recipientRoutes = require("./routes/recipients");
 const requestRoutes = require("./routes/bloodRequests");
-const staffRoutes = require("./routes/staff");
-const recipientUserRoutes = require("./routes/recipientUsers");
-
-const { isAuthenticated } = require("./middleware/authMiddleware");
 
 const app = express();
 app.use(express.json());
@@ -34,10 +30,6 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "home.html"));
 });
 
-app.get("/index.html", isAuthenticated, (req, res) => {
-  res.sendFile(path.join(__dirname, "..", "public", "index.html"));
-});
-
 app.use(express.static(path.join(__dirname, "..", "public")));
 
 app.use("/api/auth", authRoutes);
@@ -46,11 +38,8 @@ app.use("/api/donors", donorRoutes);
 app.use("/api/stock", stockRoutes);
 app.use("/api/recipients", recipientRoutes);
 app.use("/api/requests", requestRoutes);
-app.use("/api/requests", requestRoutes);
-app.use("/api/staff", staffRoutes); // <-- USE
-app.use("/api/recipient-users", recipientUserRoutes);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 async function startServer() {
   try {

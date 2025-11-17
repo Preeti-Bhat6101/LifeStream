@@ -6,38 +6,21 @@ const db = require("../config/db");
 const { isAdmin } = require("../middleware/authMiddleware");
 
 // Route: POST /api/auth/register (For creating staff accounts)
-
-router.post("/recipient/login", async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password)
+router.post("/register", isAdmin, async (req, res) => {
+  const { name, username, password, role } = req.body;
+  if (!name || !username || !password || !role) {
     return res.status(400).json({ message: "All fields are required." });
-
+  }
   try {
-    const [users] = await db.query(
-      "SELECT * FROM RecipientUsers WHERE Username = ?",
-      [username]
-    );
-    if (users.length === 0)
-      return res.status(401).json({ message: "Invalid credentials." });
-
-    const user = users[0];
-    const isMatch = await bcrypt.compare(password, user.Password);
-    if (!isMatch)
-      return res.status(401).json({ message: "Invalid credentials." });
-
-    // Create a session with the Recipient role and their organization ID
-    req.session.user = {
-      id: user.UserID,
-      name: user.Name,
-      role: "Recipient",
-      recipientId: user.RecipientID,
-    };
-    res
-      .status(200)
-      .json({ message: "Login successful.", user: req.session.user });
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const sql =
+      "INSERT INTO Staff (Name, Username, Password, Role) VALUES (?, ?, ?, ?)";
+    await db.query(sql, [name, username, hashedPassword, role]);
+    res.status(201).json({ message: "Staff member registered successfully." });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error." });
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Failed to register staff member." });
   }
 });
 
@@ -120,72 +103,6 @@ router.post("/logout", (req, res) => {
     res.clearCookie("connect.sid"); // Clears the session cookie
     res.status(200).json({ message: "Logout successful." });
   });
-});
-
-router.post("/recipient/register", isAdmin, async (req, res) => {
-  const { name, username, password, recipientId } = req.body;
-  if (!name || !username || !password || !recipientId) {
-    return res.status(400).json({ message: "All fields are required." });
-  }
-
-  try {
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const sql =
-      "INSERT INTO RecipientUsers (Name, Username, Password, RecipientID) VALUES (?, ?, ?, ?)";
-    await db.query(sql, [name, username, hashedPassword, recipientId]);
-
-    res
-      .status(201)
-      .json({ message: "Recipient user account created successfully." });
-  } catch (error) {
-    console.error("Recipient user registration error:", error);
-    res
-      .status(500)
-      .json({ message: "Failed to create recipient user account." });
-  }
-});
-
-// In src/routes/auth.js
-
-// Replace your existing '/register' route with this one
-router.post("/register", isAdmin, async (req, res) => {
-  const { name, username, password, role } = req.body;
-  if (!name || !username || !password || !role) {
-    return res.status(400).json({ message: "All fields are required." });
-  }
-
-  try {
-    // Check if username already exists
-    const [existingUsers] = await db.query(
-      "SELECT Username FROM Staff WHERE Username = ?",
-      [username]
-    );
-    if (existingUsers.length > 0) {
-      return res
-        .status(409)
-        .json({ message: "Username already exists. Please choose another." });
-    }
-
-    // Hash the password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // This is the corrected SQL query
-    const sql =
-      "INSERT INTO Staff (Name, Username, Password, Role) VALUES (?, ?, ?, ?)";
-    await db.query(sql, [name, username, hashedPassword, role]);
-
-    res.status(201).json({ message: "Staff member registered successfully." });
-  } catch (error) {
-    console.error("Registration error:", error);
-    res
-      .status(500)
-      .json({
-        message: "Failed to register staff member due to a server error.",
-      });
-  }
 });
 
 module.exports = router;

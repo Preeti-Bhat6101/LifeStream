@@ -10,26 +10,21 @@
       .hero {
         background-color: var(--dark-green);
         color: var(--white);
-        min-height: 50vh;
+        height: 60vh;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         text-align: center;
-        padding: 2rem 20px;
+        padding: 0 20px;
       }
-      .hero h2 {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        color: var(--white);
-      }
-      .hero h3 {
-        font-size: 2.5rem;
+      .hero h1 {
+        font-size: 3.5rem;
         margin-bottom: 1rem;
         color: var(--white);
       }
       .hero p {
-        font-size: 1.3rem;
+        font-size: 1.25rem;
         max-width: 600px;
       }
       .hero .cta-button {
@@ -66,58 +61,12 @@
         color: var(--dark-green);
         margin-bottom: 0.5rem;
       }
+
       footer {
         background-color: var(--dark-text);
         color: var(--white);
         text-align: center;
         padding: 2rem 0;
-      }
-
-      /* --- NEW, CORRECTED HEADER STYLES --- */
-      .home-header {
-        background: var(--white);
-        padding: 1.5rem 0;
-        border-bottom: 1px solid #e0e0e0;
-        width: 100%;
-      }
-      .home-header .container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .home-header .logo h1 {
-        color: var(--dark-green);
-        margin: 0;
-        font-size: 2.2rem;
-      }
-      .home-header nav {
-        display: flex;
-        align-items: center;
-      }
-      .home-header .portal-button {
-        display: inline-block;
-        padding: 10px 20px;
-        text-decoration: none;
-        border-radius: 5px;
-        font-weight: bold;
-        transition: all 0.3s ease;
-        margin-left: 1rem;
-      }
-      .home-header .portal-button.primary {
-        background-color: var(--medium-green);
-        color: var(--white);
-      }
-      .home-header .portal-button.primary:hover {
-        background-color: var(--dark-green);
-      }
-      .home-header .portal-button.secondary {
-        background-color: transparent;
-        color: var(--dark-green);
-        border: 1px solid var(--dark-green);
-      }
-      .home-header .portal-button.secondary:hover {
-        background-color: var(--dark-green);
-        color: var(--white);
       }
     </style>
   </head>
@@ -128,26 +77,23 @@
           <h1>LifeStream</h1>
         </div>
         <nav>
-          <a href="/recipient-login.html" class="portal-button secondary"
-            >Recipient Portal</a
-          >
-          <a href="/login.html" class="portal-button primary">Staff Portal</a>
+          <a href="/login.html" class="login-button">Staff Login</a>
         </nav>
       </div>
     </header>
 
     <main>
       <section class="hero">
-        <h2 class="subtitle">A Web-Based Blood Bank Management System</h2>
-        <h3>Your Donation Can Save a Life</h3>
+        <h1>Your Donation Can Save a Life</h1>
         <p>
-          We connect generous donors with those in critical need, ensuring a
-          safe and ready blood supply for our community.
+          Welcome to the LifeStream Blood Bank Management System. We connect
+          generous donors with those in critical need, ensuring a safe and ready
+          blood supply for our community.
         </p>
-        <a href="login.html" class="cta-button">Access Portal</a>
+        <a href="/login.html" class="cta-button">Access the Portal</a>
       </section>
 
-      <section id="features" class="features">
+      <section class="features">
         <div class="container">
           <div class="feature-item">
             <h3>Efficient Inventory Management</h3>

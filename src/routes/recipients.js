@@ -2,7 +2,6 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
-const { isAdmin } = require("../middleware/authMiddleware");
 
 // Route: POST /api/recipients
 // Desc:  Add a new recipient (e.g., a hospital)
@@ -14,10 +13,12 @@ router.post("/", async (req, res) => {
   try {
     const sql = "INSERT INTO Recipients (Name, Contact) VALUES (?, ?)";
     const [result] = await db.query(sql, [name, contact]);
-    res.status(201).json({
-      message: "Recipient added successfully",
-      recipientId: result.insertId,
-    });
+    res
+      .status(201)
+      .json({
+        message: "Recipient added successfully",
+        recipientId: result.insertId,
+      });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Failed to add recipient" });
