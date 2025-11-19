@@ -3,16 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login - LifeStream</title>
+    <title>Portal Login - LifeStream</title>
     <link rel="stylesheet" href="/css/style.css" />
     <style>
-      /* Specific styles for centering the login box */
       body {
         display: flex;
         justify-content: center;
         align-items: center;
         height: 100vh;
-        background-color: var(--dark-green); /* Dark background for login */
+        background-color: var(--dark-green);
       }
       .login-container {
         width: 100%;
@@ -41,49 +40,40 @@
   <body>
     <div class="login-container">
       <div class="login-header">
-        <h1>LifeStream</h1>
+        <h1>LifeStream Portal</h1>
         <p>Blood Bank Management System</p>
       </div>
-
       <form id="login-form">
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username" required />
-
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" required />
-
+        <label for="username">Username</label
+        ><input type="text" id="username" required />
+        <label for="password">Password</label
+        ><input type="password" id="password" required />
         <button type="submit" style="width: 100%">Login</button>
       </form>
-
       <p id="login-message" class="form-message" style="text-align: center"></p>
-
       <div class="login-footer">
-        <p>New Staff? <a href="/register.html">Register Here</a></p>
+        <p><a href="/home.html">Return to Homepage</a></p>
       </div>
     </div>
-
     <script>
       const loginForm = document.getElementById("login-form");
       const message = document.getElementById("login-message");
-
       loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const username = document.getElementById("username").value;
         const password = document.getElementById("password").value;
-
         try {
+          // All logins go to the same, single endpoint
           const response = await fetch("/api/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password }),
           });
-
           const result = await response.json();
-
           if (response.ok) {
             message.textContent = "Login successful! Redirecting...";
             message.style.color = "green";
-            // Redirect to the main dashboard
+            // Everyone redirects to the same dynamic dashboard
             setTimeout(() => {
               window.location.href = "/index.html";
             }, 1000);
@@ -92,8 +82,7 @@
             message.style.color = "red";
           }
         } catch (error) {
-          console.error("Login error:", error);
-          message.textContent = "An error occurred. Please try again.";
+          message.textContent = "An error occurred.";
           message.style.color = "red";
         }
       });

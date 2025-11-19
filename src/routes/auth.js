@@ -1,91 +1,82 @@
-// src/routes/auth.js
+// src/routes/auth.js - The New Unified Version
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const db = require("../config/db");
 const { isAdmin } = require("../middleware/authMiddleware");
 
-// Route: POST /api/auth/register (For creating staff accounts)
-router.post("/register", isAdmin, async (req, res) => {
-  const { name, username, password, role } = req.body;
-  if (!name || !username || !password || !role) {
-    return res.status(400).json({ message: "All fields are required." });
-  }
-  try {
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    const sql =
-      "INSERT INTO Staff (Name, Username, Password, Role) VALUES (?, ?, ?, ?)";
-    await db.query(sql, [name, username, hashedPassword, role]);
-    res.status(201).json({ message: "Staff member registered successfully." });
-  } catch (error) {
-    console.error("Registration error:", error);
-    res.status(500).json({ message: "Failed to register staff member." });
-  }
-});
-
-// --- THIS IS THE MODIFIED LOGIN ROUTE ---
+// A SINGLE login route for ALL users (Admin, Staff, Recipient)
 router.post("/login", async (req, res) => {
-  console.log("\n--- New Login Attempt ---");
-
-  // 1. Check what the server is receiving from the browser
   const { username, password } = req.body;
-  console.log(
-    `[Step 1] Received credentials: Username='${username}', Password='${password}'`
-  );
-
-  if (!username || !password) {
-    return res
-      .status(400)
-      .json({ message: "Username and password are required." });
-  }
-
+  if (!username || !password)
+    return res.status(400).json({ message: "All fields are required." });
   try {
-    // 2. Query the database for the user
-    const sql = "SELECT * FROM Staff WHERE Username = ?";
-    console.log(`[Step 2] Executing SQL: ${sql.replace("?", `'${username}'`)}`);
-    const [staff] = await db.query(sql, [username]);
-
-    // 3. Check if the user was found
-    if (staff.length === 0) {
-      console.log(
-        '[Step 3] Result: User not found in database. Sending "Invalid credentials".'
-      );
+    const [users] = await db.query("SELECT * FROM Users WHERE Username = ?", [
+      username,
+    ]);
+    if (users.length === 0)
       return res.status(401).json({ message: "Invalid credentials." });
-    }
 
-    const user = staff[0];
-    console.log(
-      `[Step 3] Result: User found! ID: ${user.StaffID}, Name: ${user.Name}`
-    );
-    console.log(`   > Stored Password Hash: ${user.Password}`);
-
-    // 4. Compare the submitted password with the stored hash
-    console.log("[Step 4] Comparing submitted password with stored hash...");
+    const user = users[0];
     const isMatch = await bcrypt.compare(password, user.Password);
-
-    // 5. Check the result of the comparison
-    if (!isMatch) {
-      console.log(
-        '[Step 5] Result: Password comparison failed. Sending "Invalid credentials".'
-      );
+    if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials." });
-    }
 
-    console.log("[Step 5] Result: Password comparison successful!");
-
-    // Create a session
-    req.session.user = { id: user.StaffID, name: user.Name, role: user.Role };
+    // Create a universal session with all necessary info
+    req.session.user = {
+      id: user.UserID,
+      name: user.Name,
+      role: user.Role,
+      recipientId: user.RecipientID, // This will be NULL for Admins and Staff
+    };
     res
       .status(200)
       .json({ message: "Login successful.", user: req.session.user });
   } catch (error) {
-    console.error("!!! SERVER ERROR DURING LOGIN:", error);
+    console.error("Login error:", error);
     res.status(500).json({ message: "Server error during login." });
   }
 });
 
-// Route: GET /api/auth/status
+// A SINGLE registration route for an ADMIN to create ANY type of user
+router.post("/register", isAdmin, async (req, res) => {
+  const { name, username, password, role, recipientId } = req.body;
+  if (!name || !username || !password || !role) {
+    return res
+      .status(400)
+      .json({ message: "Name, username, password, and role are required." });
+  }
+  if (role === "Recipient" && !recipientId) {
+    return res
+      .status(400)
+      .json({ message: "A recipient user must be assigned to a hospital." });
+  }
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    // The 'RecipientID' will be null if the role is not 'Recipient'
+    const finalRecipientId = role === "Recipient" ? recipientId : null;
+
+    const sql =
+      "INSERT INTO Users (Name, Username, Password, Role, RecipientID) VALUES (?, ?, ?, ?, ?)";
+    await db.query(sql, [
+      name,
+      username,
+      hashedPassword,
+      role,
+      finalRecipientId,
+    ]);
+
+    res.status(201).json({ message: "User account created successfully." });
+  } catch (error) {
+    if (error.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({ message: "Username already exists." });
+    }
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Failed to create user account." });
+  }
+});
+
+// GET /status - Unchanged but vital
 router.get("/status", (req, res) => {
   if (req.session.user) {
     res.status(200).json({ loggedIn: true, user: req.session.user });
@@ -94,13 +85,11 @@ router.get("/status", (req, res) => {
   }
 });
 
-// Route: POST /api/auth/logout
+// POST /logout - Unchanged
 router.post("/logout", (req, res) => {
   req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ message: "Could not log out." });
-    }
-    res.clearCookie("connect.sid"); // Clears the session cookie
+    if (err) return res.status(500).json({ message: "Could not log out." });
+    res.clearCookie("connect.sid");
     res.status(200).json({ message: "Logout successful." });
   });
 });

@@ -173,8 +173,6 @@ nav a.active {
   display: none;
 }
 
-/* --- HOMEPAGE HEADER & FOOTER STYLES --- */
-
 .home-header {
   background: var(--white);
   padding: 1.5rem 0;
@@ -208,8 +206,6 @@ nav a.active {
   color: var(--white);
 }
 
-/* --- DASHBOARD HEADER REFINEMENTS --- */
-
 /* Style for the new logo container */
 .logo h1 {
   color: var(--white);
@@ -234,4 +230,8 @@ nav a.active {
 #logout-btn:hover {
   background-color: var(--blood-red);
   border-color: var(--blood-red);
+}
+
+.hidden {
+  display: none;
 }

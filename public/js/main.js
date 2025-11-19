@@ -1,506 +1,527 @@
-// public/js/main.js
-
-const searchForm = document.getElementById("emergency-search-form");
-const searchBloodGroupSelect = document.getElementById("search-blood-group");
-const searchResultsList = document.getElementById("search-results-list");
-
-(async function checkLogin() {
-  try {
-    const response = await fetch("/api/auth/status");
-    const data = await response.json();
-
-    if (!data.loggedIn) {
-      window.location.href = "/login.html";
-      return; // Stop execution if not logged in
-    }
-
-    // User is logged in, now check their role
-    console.log("Logged in as:", data.user.name, "Role:", data.user.role);
-
-    // --- ROLE-BASED UI CONTROL ---
-    const managementNavLink = document.getElementById("management-nav-link");
-    if (data.user.role !== "Admin") {
-      // If the user is NOT an admin, hide the management link
-      if (managementNavLink) managementNavLink.style.display = "none";
-    } else {
-      // Otherwise, make sure it's visible
-      if (managementNavLink) managementNavLink.style.display = "block";
-    }
-  } catch (error) {
-    console.error("Auth check failed:", error);
-    window.location.href = "/login.html";
-  }
-})();
+// public/js/main.js - FINAL, CORRECTED AND TESTED VERSION
 
 document.addEventListener("DOMContentLoaded", () => {
-  // --- DOM Element Selectors ---
+  const getElement = (id) => document.getElementById(id);
 
-  // For Donor Registration
-  const bloodGroupSelect = document.getElementById("blood-group-select");
-  const donorForm = document.getElementById("donor-form");
-  const donorList = document.getElementById("donor-list");
-  const donorFormMessage = document.getElementById("donor-form-message");
-
-  // For Recording Donations (Blood Stock)
-  const donorSelect = document.getElementById("donor-select");
-  const stockForm = document.getElementById("stock-form");
-  const stockList = document.getElementById("stock-list");
-  const stockFormMessage = document.getElementById("stock-form-message");
-
-  const recipientForm = document.getElementById("recipient-form");
-  const recipientFormMessage = document.getElementById(
-    "recipient-form-message"
-  );
-
-  const requestForm = document.getElementById("request-form");
-  const recipientSelect = document.getElementById("recipient-select");
-  const requestBloodGroupSelect = document.getElementById(
-    "request-blood-group-select"
-  );
-  const requestList = document.getElementById("request-list");
-  const requestFormMessage = document.getElementById("request-form-message");
-
-  const navLinks = document.querySelectorAll(".nav-link");
-  const pageContents = document.querySelectorAll(".page-content");
-  const logoutBtn = document.getElementById("logout-btn");
-
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", async () => {
-      try {
-        await fetch("/api/auth/logout", { method: "POST" });
-        window.location.href = "/home.html";
-      } catch (error) {
-        console.error("Logout failed", error);
-      }
-    });
-  }
-  // --- API Functions for Donors and Blood Groups ---
-
-  navLinks.forEach((link) => {
-    link.addEventListener("click", (event) => {
-      event.preventDefault(); // Stop the link from reloading the page
-
-      const targetId = link.dataset.target;
-
-      // Hide all pages
-      pageContents.forEach((page) => {
-        page.classList.add("hidden");
-      });
-
-      // Show the target page
-      document.getElementById(targetId).classList.remove("hidden");
-
-      // Update active link style
-      navLinks.forEach((navLink) => {
-        navLink.classList.remove("active");
-      });
-      link.classList.add("active");
-    });
-  });
-
-  // Fetches blood groups to populate the dropdown in the donor registration form
-  const fetchBloodGroups = async () => {
+  const setupUIForRole = async () => {
     try {
-      const response = await fetch("/api/blood-groups");
-      const bloodGroups = await response.json();
-
-      bloodGroupSelect.innerHTML =
-        '<option value="">Select Blood Group</option>'; // Default option
-      bloodGroups.forEach((group) => {
-        const option = document.createElement("option");
-        option.value = group.BloodGroupID;
-        option.textContent = group.BloodType;
-        bloodGroupSelect.appendChild(option);
-      });
-    } catch (error) {
-      console.error("Error fetching blood groups:", error);
-      bloodGroupSelect.innerHTML =
-        '<option value="">Error loading groups</option>';
-    }
-  };
-
-  // Fetches all registered donors to display in the main table
-  const fetchDonors = async () => {
-    try {
-      const response = await fetch("/api/donors");
-      const donors = await response.json();
-
-      donorList.innerHTML = ""; // Clear existing list
-
-      if (donors.length === 0) {
-        donorList.innerHTML = '<tr><td colspan="5">No donors found.</td></tr>';
+      const response = await fetch("/api/auth/status");
+      const data = await response.json();
+      if (!data.loggedIn) {
+        window.location.href = "/login.html";
         return;
       }
+      const user = data.user;
+      console.log(`Setting up UI for role: ${user.role}`);
 
-      donors.forEach((donor) => {
-        const row = document.createElement("tr");
-        // Format the date to be more readable, and show 'N/A' if null
-        const lastDonation = donor.LastDonationDate
-          ? new Date(donor.LastDonationDate).toLocaleDateString()
-          : "N/A";
-        row.innerHTML = `
-                    <td>${donor.Name}</td>
-                    <td>${donor.Contact}</td>
-                    <td>${donor.Location}</td>
-                    <td>${donor.BloodType}</td>
-                    <td>${lastDonation}</td>
-                `;
-        donorList.appendChild(row);
-      });
+      const staffAdminLinks = document.querySelectorAll(".staff-admin-link");
+      const adminLink = getElement("management-nav-link");
+      const staffDashboard = getElement("staff-dashboard");
+      const adminDashboard = getElement("admin-dashboard");
+      const recipientDashboard = getElement("recipient-dashboard");
+
+      staffAdminLinks.forEach((link) => (link.style.display = "none"));
+      if (adminLink) adminLink.style.display = "none";
+      if (staffDashboard) staffDashboard.classList.add("hidden");
+      if (adminDashboard) adminDashboard.classList.add("hidden");
+      if (recipientDashboard) recipientDashboard.classList.add("hidden");
+
+      if (user.role === "Admin") {
+        staffAdminLinks.forEach((link) => (link.style.display = "block"));
+        if (adminLink) adminLink.style.display = "block";
+        if (adminDashboard) adminDashboard.classList.remove("hidden");
+        fetchAllAdminData();
+        fetchAllCommonData();
+      } else if (user.role === "Staff") {
+        staffAdminLinks.forEach((link) => (link.style.display = "block"));
+        if (staffDashboard) staffDashboard.classList.remove("hidden");
+        fetchAllCommonData();
+      } else if (user.role === "Recipient") {
+        if (recipientDashboard) recipientDashboard.classList.remove("hidden");
+        fetchRecipientData();
+      }
     } catch (error) {
-      console.error("Error fetching donors:", error);
-      donorList.innerHTML =
-        '<tr><td colspan="5">Error loading donors.</td></tr>';
+      console.error("Failed to setup UI:", error);
+      window.location.href = "/login.html";
     }
   };
 
-  // Handles the submission of the new donor registration form
+  const fetchAllAdminData = () => {
+    fetchUserList();
+    // fetchRecipientsForManagement();
+  };
+  const fetchAllCommonData = () => {
+    fetchBloodGroups();
+    fetchDonors();
+    fetchDonorsForDropdown();
+    fetchStock();
+    fetchRequests();
+    fetchHistory();
+    fetchBloodGroupsForSearch();
+    fetchRecipientsForDropdown();
+  };
+  const fetchRecipientData = () => {
+    fetchBloodGroupsForRecipient();
+    fetchRecipientHistory();
+  };
+
+  const showMessage = (element, message, isSuccess) => {
+    if (!element) return;
+    element.textContent = message;
+    element.style.color = isSuccess ? "green" : "red";
+    setTimeout(
+      () => {
+        element.textContent = "";
+      },
+      isSuccess ? 3000 : 5000
+    );
+  };
+
+  const fetchUserList = async () => {
+    try {
+      const res = await fetch("/api/users");
+      const users = await res.json();
+      getElement("management-recipient-list").innerHTML = "";
+      users.forEach((u) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${u.Name}</td><td>${u.Username}</td><td>${
+          u.Role
+        }</td><td>${u.HospitalName || "N/A"}</td>`;
+        getElement("management-recipient-list").appendChild(row);
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchRecipientsForManagement = async () => {
+    try {
+      const res = await fetch("/api/recipients");
+      const recipients = await res.json();
+      getElement("management-recipient-list").innerHTML = "";
+      recipients.forEach((r) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${r.Name}</td><td>${r.Contact || "N/A"}</td>`;
+        getElement("management-recipient-list").appendChild(row);
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleCreateUser = async (event) => {
+    event.preventDefault();
+    const userData = {
+      name: getElement("user-name").value,
+      username: getElement("user-username").value,
+      password: getElement("user-password").value,
+      role: getElement("user-role").value,
+      recipientId: getElement("assign-recipient").value,
+    };
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message);
+      showMessage(getElement("create-user-message"), result.message, true);
+      getElement("create-user-form").reset();
+      fetchUserList();
+    } catch (e) {
+      showMessage(getElement("create-user-message"), e.message, false);
+    }
+  };
+
+  const fetchBloodGroups = async () => {
+    try {
+      const res = await fetch("/api/blood-groups");
+      const groups = await res.json();
+      getElement("blood-group-select").innerHTML =
+        '<option value="">Select</option>';
+      groups.forEach((g) => {
+        const opt = document.createElement("option");
+        opt.value = g.BloodGroupID;
+        opt.textContent = g.BloodType;
+        getElement("blood-group-select").appendChild(opt.cloneNode(true));
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+  const fetchDonors = async () => {
+    try {
+      const res = await fetch("/api/donors");
+      const donors = await res.json();
+      getElement("donor-list").innerHTML = "";
+      donors.forEach((d) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${d.Name}</td><td>${d.Contact}</td><td>${
+          d.Location
+        }</td><td>${d.BloodType}</td><td>${
+          d.LastDonationDate
+            ? new Date(d.LastDonationDate).toLocaleDateString()
+            : "N/A"
+        }</td>`;
+        getElement("donor-list").appendChild(row);
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
   const handleDonorSubmit = async (event) => {
     event.preventDefault();
     const donorData = {
-      name: document.getElementById("name").value,
-      contact: document.getElementById("contact").value,
-      location: document.getElementById("location").value,
-      bloodGroupId: document.getElementById("blood-group-select").value,
-      lastDonationDate: document.getElementById("last-donation").value,
+      name: getElement("name").value,
+      contact: getElement("contact").value,
+      location: getElement("location").value,
+      bloodGroupId: getElement("blood-group-select").value,
+      lastDonationDate: getElement("last-donation").value,
     };
     try {
-      const response = await fetch("/api/donors", {
+      const res = await fetch("/api/donors", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(donorData),
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message);
-
-      donorFormMessage.textContent = result.message;
-      donorFormMessage.style.color = "green";
-      donorForm.reset();
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message);
+      showMessage(getElement("donor-form-message"), result.message, true);
+      getElement("donor-form").reset();
       fetchDonors();
       fetchDonorsForDropdown();
-
-      // *** NEW: Clear the success message after 3 seconds ***
-      setTimeout(() => {
-        donorFormMessage.textContent = "";
-      }, 3000);
-    } catch (error) {
-      donorFormMessage.textContent = `Error: ${error.message}`;
-      donorFormMessage.style.color = "red";
-
-      // *** NEW: Clear the error message after 5 seconds ***
-      setTimeout(() => {
-        donorFormMessage.textContent = "";
-      }, 5000);
+    } catch (e) {
+      showMessage(getElement("donor-form-message"), e.message, false);
     }
   };
-
-  // --- API Functions for Blood Stock ---
-
-  // Fetches donors specifically for the "Record Donation" dropdown
   const fetchDonorsForDropdown = async () => {
     try {
-      const response = await fetch("/api/donors");
-      const donors = await response.json();
-
-      donorSelect.innerHTML = '<option value="">Select a Donor</option>';
-      donors.forEach((donor) => {
-        const option = document.createElement("option");
-        option.value = donor.DonorID;
-        option.textContent = `${donor.Name} (${donor.BloodType})`;
-        donorSelect.appendChild(option);
+      const res = await fetch("/api/donors");
+      const donors = await res.json();
+      getElement("donor-select").innerHTML = '<option value="">Select</option>';
+      donors.forEach((d) => {
+        const opt = document.createElement("option");
+        opt.value = d.DonorID;
+        opt.textContent = `${d.Name} (${d.BloodType})`;
+        getElement("donor-select").appendChild(opt);
       });
-    } catch (error) {
-      console.error("Error fetching donors for dropdown:", error);
-      donorSelect.innerHTML = '<option value="">Error loading donors</option>';
+    } catch (e) {
+      console.error(e);
     }
   };
-
-  // Fetches the current blood stock inventory
   const fetchStock = async () => {
     try {
-      const response = await fetch("/api/stock");
-      const stock = await response.json();
-
-      stockList.innerHTML = "";
-      if (stock.length === 0) {
-        stockList.innerHTML =
-          '<tr><td colspan="4">No units available in stock.</td></tr>';
-        return;
-      }
-      stock.forEach((unit) => {
+      const res = await fetch("/api/stock");
+      const stock = await res.json();
+      getElement("stock-list").innerHTML = "";
+      stock.forEach((s) => {
         const row = document.createElement("tr");
-        const collection = new Date(unit.CollectionDate).toLocaleDateString();
-        const expiry = new Date(unit.ExpiryDate).toLocaleDateString();
-        row.innerHTML = `<td>${unit.DonorName}</td><td>${unit.BloodType}</td><td>${unit.QuantityML}</td><td>${collection}</td><td>${expiry}</td>`;
-        stockList.appendChild(row);
+        row.innerHTML = `<td>${s.DonorName}</td><td>${s.BloodType}</td><td>${
+          s.QuantityML
+        }</td><td>${new Date(
+          s.CollectionDate
+        ).toLocaleDateString()}</td><td>${new Date(
+          s.ExpiryDate
+        ).toLocaleDateString()}</td>`;
+        getElement("stock-list").appendChild(row);
       });
-    } catch (error) {
-      console.error("Error fetching stock:", error);
-      stockList.innerHTML =
-        '<tr><td colspan="4">Error loading stock.</td></tr>';
+    } catch (e) {
+      console.error(e);
     }
   };
-
-  // Handles the submission of the "Record Donation" form
   const handleStockSubmit = async (event) => {
     event.preventDefault();
     const stockData = {
-      donorId: document.getElementById("donor-select").value,
-      collectionDate: document.getElementById("collection-date").value,
-      quantityML: document.getElementById("quantity-ml").value, // <-- Add this line
+      donorId: getElement("donor-select").value,
+      collectionDate: getElement("collection-date").value,
+      quantityML: getElement("quantity-ml").value,
     };
     try {
-      const response = await fetch("/api/stock", {
+      const res = await fetch("/api/stock", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(stockData),
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message);
-
-      stockFormMessage.textContent = result.message;
-      stockFormMessage.style.color = "green";
-      stockForm.reset();
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message);
+      showMessage(getElement("stock-form-message"), result.message, true);
+      getElement("stock-form").reset();
       fetchStock();
-
-      // *** NEW: Clear the success message after 3 seconds ***
-      setTimeout(() => {
-        stockFormMessage.textContent = "";
-      }, 3000);
-    } catch (error) {
-      stockFormMessage.textContent = `Error: ${error.message}`;
-      stockFormMessage.style.color = "red";
-
-      // *** NEW: Clear the error message after 5 seconds ***
-      setTimeout(() => {
-        stockFormMessage.textContent = "";
-      }, 5000);
+    } catch (e) {
+      showMessage(getElement("stock-form-message"), e.message, false);
     }
   };
-
-  const handleRecipientSubmit = async (event) => {
-    event.preventDefault();
-    const recipientData = {
-      name: document.getElementById("recipient-name").value,
-      contact: document.getElementById("recipient-contact").value,
-    };
-    try {
-      const response = await fetch("/api/recipients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(recipientData),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message);
-
-      recipientFormMessage.textContent = result.message;
-      recipientFormMessage.style.color = "green";
-      recipientForm.reset();
-      fetchRecipientsForDropdown();
-
-      // *** NEW: Clear the success message after 3 seconds ***
-      setTimeout(() => {
-        recipientFormMessage.textContent = "";
-      }, 3000);
-    } catch (error) {
-      recipientFormMessage.textContent = `Error: ${error.message}`;
-      recipientFormMessage.style.color = "red";
-
-      // *** NEW: Clear the error message after 5 seconds ***
-      setTimeout(() => {
-        recipientFormMessage.textContent = "";
-      }, 5000);
-    }
-  };
-
   const fetchRecipientsForDropdown = async () => {
     try {
-      const response = await fetch("/api/recipients");
-      const recipients = await response.json();
-      recipientSelect.innerHTML =
-        '<option value="">Select a Recipient</option>';
-      recipients.forEach((r) => {
-        const option = document.createElement("option");
-        option.value = r.RecipientID;
-        option.textContent = r.Name;
-        recipientSelect.appendChild(option);
-      });
-    } catch (error) {
-      console.error("Error fetching recipients:", error);
+      const res = await fetch("/api/recipients");
+      const recipients = await res.json();
+      const assignSelect = getElement("assign-recipient");
+      if (assignSelect) {
+        assignSelect.innerHTML = '<option value="">Select Hospital</option>';
+        recipients.forEach((r) => {
+          const opt = document.createElement("option");
+          opt.value = r.RecipientID;
+          opt.textContent = r.Name;
+          assignSelect.appendChild(opt);
+        });
+      }
+    } catch (e) {
+      console.error(e);
     }
   };
-
-  const fetchBloodGroupsForRequest = async () => {
-    try {
-      const response = await fetch("/api/blood-groups");
-      const bloodGroups = await response.json();
-      requestBloodGroupSelect.innerHTML =
-        '<option value="">Select Blood Group</option>';
-      bloodGroups.forEach((group) => {
-        const option = document.createElement("option");
-        option.value = group.BloodGroupID;
-        option.textContent = group.BloodType;
-        requestBloodGroupSelect.appendChild(option);
-      });
-    } catch (error) {
-      console.error("Error fetching blood groups:", error);
-    }
-  };
-
   const fetchRequests = async () => {
     try {
-      const response = await fetch("/api/requests");
-      const requests = await response.json();
-      requestList.innerHTML = "";
-      if (requests.length === 0) {
-        requestList.innerHTML =
-          '<tr><td colspan="4">No pending requests.</td></tr>';
-        return;
-      }
-      requests.forEach((req) => {
+      const res = await fetch("/api/requests");
+      const reqs = await res.json();
+      getElement("request-list").innerHTML = "";
+      reqs.forEach((r) => {
         const row = document.createElement("tr");
-        const reqDate = new Date(req.RequestDate).toLocaleString();
-        row.innerHTML = `<td>${req.RecipientName}</td><td>${req.BloodType}</td><td>${req.QuantityRequiredML}</td><td>${reqDate}</td><td><button class="fulfill-btn" data-id="${req.RequestID}">Fulfill</button></td>`;
-        requestList.appendChild(row);
+        row.innerHTML = `<td>${r.RecipientName}</td><td>${
+          r.BloodType
+        }</td><td>${r.QuantityRequiredML}</td><td>${new Date(
+          r.RequestDate
+        ).toLocaleString()}</td><td><button class="fulfill-btn" data-id="${
+          r.RequestID
+        }">Fulfill</button></td>`;
+        getElement("request-list").appendChild(row);
       });
-    } catch (error) {
-      console.error("Error fetching requests:", error);
+    } catch (e) {
+      console.error(e);
     }
   };
-
+  const handleFulfillClick = async (event) => {
+    if (!event.target.classList.contains("fulfill-btn")) return;
+    const id = event.target.dataset.id;
+    if (!confirm("Fulfill this request?")) return;
+    try {
+      const res = await fetch(`/api/requests/${id}/fulfill`, { method: "PUT" });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message);
+      alert(result.message);
+      fetchRequests();
+      fetchStock();
+      fetchHistory();
+    } catch (e) {
+      alert(`Error: ${e.message}`);
+    }
+  };
+  const fetchHistory = async () => {
+    try {
+      const res = await fetch("/api/requests/history");
+      const history = await res.json();
+      getElement("history-list").innerHTML = "";
+      history.forEach((h) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${h.RecipientName}</td><td>${
+          h.BloodType
+        }</td><td>${h.QuantityRequiredML}</td><td>${new Date(
+          h.RequestDate
+        ).toLocaleString()}</td><td>${h.Status}</td><td>${
+          h.FulfilledBy || "N/A"
+        }</td>`;
+        getElement("history-list").appendChild(row);
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
   const fetchBloodGroupsForSearch = async () => {
     try {
-      const response = await fetch("/api/blood-groups");
-      const bloodGroups = await response.json();
-      searchBloodGroupSelect.innerHTML =
-        '<option value="">Select Blood Group</option>';
-      bloodGroups.forEach((group) => {
-        const option = document.createElement("option");
-        option.value = group.BloodGroupID;
-        option.textContent = group.BloodType;
-        searchBloodGroupSelect.appendChild(option);
+      const res = await fetch("/api/blood-groups");
+      const groups = await res.json();
+      getElement("search-blood-group").innerHTML =
+        '<option value="">Select</option>';
+      groups.forEach((g) => {
+        const opt = document.createElement("option");
+        opt.value = g.BloodGroupID;
+        opt.textContent = g.BloodType;
+        getElement("search-blood-group").appendChild(opt);
       });
-    } catch (error) {
-      console.error("Error fetching blood groups for search:", error);
+    } catch (e) {
+      console.error(e);
     }
   };
-
   const handleEmergencySearch = async (event) => {
     event.preventDefault();
     const searchData = {
-      bloodGroupId: document.getElementById("search-blood-group").value,
-      location: document.getElementById("search-location").value,
+      bloodGroupId: getElement("search-blood-group").value,
+      location: getElement("search-location").value,
     };
-
     try {
-      const response = await fetch("/api/donors/search", {
+      const res = await fetch("/api/donors/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(searchData),
       });
-      const results = await response.json();
-
-      if (!response.ok) throw new Error(results.message || "Search failed");
-
-      searchResultsList.innerHTML = ""; // Clear previous results
+      const results = await res.json();
+      if (!res.ok) throw new Error("Search failed");
+      getElement("search-results-list").innerHTML = "";
       if (results.length === 0) {
-        searchResultsList.innerHTML =
-          '<tr><td colspan="5">No matching donors found.</td></tr>';
+        getElement("search-results-list").innerHTML =
+          '<tr><td colspan="5">No matching donors.</td></tr>';
         return;
       }
-
-      results.forEach((donor) => {
+      results.forEach((d) => {
         const row = document.createElement("tr");
-        const lastDonation = donor.LastDonationDate
-          ? new Date(donor.LastDonationDate).toLocaleDateString()
-          : "N/A";
-        row.innerHTML = `
-                <td>${donor.Name}</td>
-                <td>${donor.Contact}</td>
-                <td>${donor.Location}</td>
-                <td>${donor.BloodType}</td>
-                <td>${lastDonation}</td>
-            `;
-        searchResultsList.appendChild(row);
+        row.innerHTML = `<td>${d.Name}</td><td>${d.Contact}</td><td>${
+          d.Location
+        }</td><td>${d.BloodType}</td><td>${
+          d.LastDonationDate
+            ? new Date(d.LastDonationDate).toLocaleDateString()
+            : "N/A"
+        }</td>`;
+        getElement("search-results-list").appendChild(row);
       });
-    } catch (error) {
-      searchResultsList.innerHTML = `<tr><td colspan="5" style="color: red;">Error: ${error.message}</td></tr>`;
+    } catch (e) {
+      getElement(
+        "search-results-list"
+      ).innerHTML = `<tr><td colspan="5" style="color:red;">Error: ${e.message}</td></tr>`;
     }
   };
-
-  const handleRequestSubmit = async (event) => {
+  const fetchBloodGroupsForRecipient = async () => {
+    try {
+      const res = await fetch("/api/blood-groups");
+      const groups = await res.json();
+      getElement("recipient-blood-group-select").innerHTML =
+        '<option value="">Select</option>';
+      groups.forEach((g) => {
+        const opt = document.createElement("option");
+        opt.value = g.BloodGroupID;
+        opt.textContent = g.BloodType;
+        getElement("recipient-blood-group-select").appendChild(opt);
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+  const fetchRecipientHistory = async () => {
+    try {
+      const res = await fetch("/api/requests/my-requests");
+      const reqs = await res.json();
+      getElement("recipient-history-list").innerHTML = "";
+      reqs.forEach((r) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${r.BloodType}</td><td>${
+          r.QuantityRequiredML
+        }</td><td>${new Date(r.RequestDate).toLocaleString()}</td><td>${
+          r.Status
+        }</td>`;
+        getElement("recipient-history-list").appendChild(row);
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+  const handleRecipientRequestSubmit = async (event) => {
     event.preventDefault();
-    const requestData = {
-      recipientId: recipientSelect.value,
-      bloodGroupId: requestBloodGroupSelect.value,
-      quantityRequiredML: document.getElementById("request-quantity-ml").value, // <-- Add this line
+    const reqData = {
+      bloodGroupId: getElement("recipient-blood-group-select").value,
+      quantityRequiredML: getElement("recipient-quantity-ml").value,
     };
     try {
-      const response = await fetch("/api/requests", {
+      const res = await fetch("/api/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestData),
+        body: JSON.stringify(reqData),
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message);
-
-      requestFormMessage.textContent = result.message;
-      requestFormMessage.style.color = "green";
-      requestForm.reset();
-      fetchRequests();
-
-      // *** NEW: Clear the success message after 3 seconds ***
-      setTimeout(() => {
-        requestFormMessage.textContent = "";
-      }, 3000);
-    } catch (error) {
-      requestFormMessage.textContent = `Error: ${error.message}`;
-      requestFormMessage.style.color = "red";
-
-      // *** NEW: Clear the error message after 5 seconds ***
-      setTimeout(() => {
-        requestFormMessage.textContent = "";
-      }, 5000);
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message);
+      showMessage(
+        getElement("recipient-request-message"),
+        result.message,
+        true
+      );
+      getElement("recipient-request-form").reset();
+      fetchRecipientHistory();
+    } catch (e) {
+      showMessage(getElement("recipient-request-message"), e.message, false);
     }
   };
+  const onboardRecipientForm = document.getElementById(
+    "onboard-recipient-form"
+  );
+  const onboardRecipientMessage = document.getElementById(
+    "onboard-recipient-message"
+  );
 
-  const handleFulfillClick = async (event) => {
-    if (!event.target.classList.contains("fulfill-btn")) return;
-    const requestId = event.target.dataset.id;
-    if (!confirm("Are you sure you want to fulfill this request from stock?"))
-      return;
+  const handleOnboardRecipient = async (event) => {
+    event.preventDefault();
+    const onboardData = {
+      hospitalName: document.getElementById("hospital-name").value,
+      hospitalContact: document.getElementById("hospital-contact").value,
+      employeeName: document.getElementById("recipient-user-name").value,
+      username: document.getElementById("recipient-username").value,
+      password: document.getElementById("recipient-password").value,
+    };
 
     try {
-      const response = await fetch(`/api/requests/${requestId}/fulfill`, {
-        method: "PUT",
+      const response = await fetch("/api/recipients/onboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(onboardData),
       });
+
       const result = await response.json();
       if (!response.ok) throw new Error(result.message);
-      alert(result.message);
-      fetchRequests(); // Refresh request list
-      fetchStock(); // Refresh stock inventory
+
+      showMessage(onboardRecipientMessage, result.message, true);
+      onboardRecipientForm.reset();
+
+      fetchUserList();
+      fetchRecipientsForManagement();
     } catch (error) {
-      alert(`Error: ${error.message}`);
+      showMessage(onboardRecipientMessage, error.message, false);
     }
   };
 
-  // --- Initial Setup and Event Listeners ---
+  const navLinks = document.querySelectorAll(".nav-link");
+  const pageContents = document.querySelectorAll(".page-content");
+  navLinks.forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      const targetId = link.dataset.target;
+      pageContents.forEach((page) => page.classList.add("hidden"));
+      getElement(targetId).classList.remove("hidden");
+      navLinks.forEach((navLink) => navLink.classList.remove("active"));
+      link.classList.add("active");
+    });
+  });
+  getElement("logout-btn")?.addEventListener("click", async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      window.location.href = "/home.html";
+    } catch (e) {
+      console.error(e);
+    }
+  });
+  getElement("create-user-form")?.addEventListener("submit", handleCreateUser);
+  getElement("create-recipient-form")?.addEventListener(
+    "submit",
+    handleCreateRecipient
+  );
+  getElement("donor-form")?.addEventListener("submit", handleDonorSubmit);
+  getElement("stock-form")?.addEventListener("submit", handleStockSubmit);
+  getElement("request-list")?.addEventListener("click", handleFulfillClick);
+  getElement("emergency-search-form")?.addEventListener(
+    "submit",
+    handleEmergencySearch
+  );
+  getElement("recipient-request-form")?.addEventListener(
+    "submit",
+    handleRecipientRequestSubmit
+  );
+  getElement("user-role")?.addEventListener("change", (e) => {
+    if (e.target.value === "Recipient") {
+      getElement("recipient-assignment-div").classList.remove("hidden");
+    } else {
+      getElement("recipient-assignment-div").classList.add("hidden");
+    }
+  });
+  getElement("onboard-recipient-form")?.addEventListener(
+    "submit",
+    handleOnboardRecipient
+  );
 
-  // Add event listeners to the forms
-  donorForm.addEventListener("submit", handleDonorSubmit);
-  stockForm.addEventListener("submit", handleStockSubmit);
-  recipientForm.addEventListener("submit", handleRecipientSubmit);
-  requestForm.addEventListener("submit", handleRequestSubmit);
-  requestList.addEventListener("click", handleFulfillClick);
-  searchForm.addEventListener("submit", handleEmergencySearch);
-
-  // Call all the functions to fetch and display initial data when the page loads
-  fetchBloodGroups();
-  fetchDonors();
-  fetchDonorsForDropdown();
-  fetchStock();
-  fetchRecipientsForDropdown();
-  fetchBloodGroupsForRequest();
-  fetchRequests();
-  fetchBloodGroupsForSearch();
+  setupUIForRole();
 });
