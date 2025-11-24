@@ -94,43 +94,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  const fetchRecipientsForManagement = async () => {
-    try {
-      const res = await fetch("/api/recipients");
-      const recipients = await res.json();
-      getElement("management-recipient-list").innerHTML = "";
-      recipients.forEach((r) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>${r.Name}</td><td>${r.Contact || "N/A"}</td>`;
-        getElement("management-recipient-list").appendChild(row);
-      });
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
   const handleCreateUser = async (event) => {
     event.preventDefault();
     const userData = {
-      name: getElement("user-name").value,
-      username: getElement("user-username").value,
-      password: getElement("user-password").value,
-      role: getElement("user-role").value,
-      recipientId: getElement("assign-recipient").value,
+      name: getElement("staff-name").value,
+      username: getElement("staff-username").value,
+      password: getElement("staff-password").value,
+      role: getElement("staff-role").value,
+      recipientId: getElement("assign-recipient")?.value || null,
     };
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
+        credentials: "include",
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.message);
-      showMessage(getElement("create-user-message"), result.message, true);
-      getElement("create-user-form").reset();
+      showMessage(getElement("create-staff-message"), result.message, true);
+      getElement("create-staff-form").reset();
       fetchUserList();
     } catch (e) {
-      showMessage(getElement("create-user-message"), e.message, false);
+      showMessage(getElement("create-staff-message"), e.message, false);
     }
   };
 
@@ -464,12 +450,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const result = await response.json();
       if (!response.ok) throw new Error(result.message);
-
       showMessage(onboardRecipientMessage, result.message, true);
       onboardRecipientForm.reset();
-
       fetchUserList();
-      fetchRecipientsForManagement();
     } catch (error) {
       showMessage(onboardRecipientMessage, error.message, false);
     }
@@ -495,7 +478,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error(e);
     }
   });
-  getElement("create-user-form")?.addEventListener("submit", handleCreateUser);
+  getElement("create-staff-form")?.addEventListener("submit", handleCreateUser);
   getElement("create-recipient-form")?.addEventListener(
     "submit",
     handleCreateRecipient
