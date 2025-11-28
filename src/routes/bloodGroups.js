@@ -56,5 +56,4 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Export the router to be used in the main server file
 module.exports = router;

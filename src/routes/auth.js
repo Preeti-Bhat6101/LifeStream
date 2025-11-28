@@ -76,7 +76,7 @@ router.post("/register", isAdmin, async (req, res) => {
   }
 });
 
-// GET /status - Unchanged but vital
+// GET /status -
 router.get("/status", (req, res) => {
   if (req.session.user) {
     res.status(200).json({ loggedIn: true, user: req.session.user });
@@ -85,7 +85,7 @@ router.get("/status", (req, res) => {
   }
 });
 
-// POST /logout - Unchanged
+// POST /logout
 router.post("/logout", (req, res) => {
   req.session.destroy((err) => {
     if (err) return res.status(500).json({ message: "Could not log out." });

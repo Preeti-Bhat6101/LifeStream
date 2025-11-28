@@ -26,12 +26,10 @@ router.post("/", async (req, res) => {
       finalLastDonationDate,
     ]);
 
-    res
-      .status(201)
-      .json({
-        message: "Donor registered successfully",
-        donorId: result.insertId,
-      });
+    res.status(201).json({
+      message: "Donor registered successfully",
+      donorId: result.insertId,
+    });
   } catch (error) {
     console.error("Error registering donor:", error);
     res
@@ -87,9 +85,6 @@ router.post("/search", async (req, res) => {
       sql += " AND Location LIKE ?";
       params.push(`%${location}%`);
     }
-
-    // Optional: Add eligibility check (e.g., last donated more than 3 months ago)
-    // sql += ' AND (LastDonationDate IS NULL OR LastDonationDate <= DATE_SUB(CURDATE(), INTERVAL 3 MONTH))';
 
     sql += " ORDER BY Name;";
 
